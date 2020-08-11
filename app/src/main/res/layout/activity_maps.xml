@@ -40,12 +40,36 @@
             app:layout_constraintTop_toTopOf="@+id/map" />
 
         <Button
-            android:id="@+id/next"
+            android:id="@+id/start"
             android:layout_width="50dp"
             android:layout_height="70dp"
             android:layout_marginTop="52dp"
-            android:text="Next"
+            android:visibility="visible"
+            android:text="Start"
             app:layout_constraintHorizontal_bias="0.163"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/map" />
+
+        <Button
+            android:id="@+id/pause"
+            android:layout_width="50dp"
+            android:layout_height="70dp"
+            android:layout_marginTop="52dp"
+            android:visibility="invisible"
+            android:text="Pause"
+            app:layout_constraintHorizontal_bias="0.163"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/map" />
+
+        <Button
+            android:id="@+id/reset"
+            android:layout_width="50dp"
+            android:layout_height="70dp"
+            android:layout_marginTop="52dp"
+            android:text="Reset"
+            app:layout_constraintHorizontal_bias="0.332"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toTopOf="@+id/map" />
