@@ -3,7 +3,11 @@ package com.client.mobliemapproj
 import android.location.Geocoder
 import android.os.Bundle
 import android.util.Log
+import android.view.View
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.Toolbar
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -33,6 +37,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
     private var zoomSpot = LatLng(37.5217, 126.9243)
     private var startIndex = 0
     private var countingIndex = 0
+    private var items = mutableListOf("ALL", "CardA", "CardB", "CardC")
+    private var filter = items[0]
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -57,6 +63,13 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
         adapter = PaymentAdapter()
         recyclerView.adapter = adapter
+
+        val toolbar = findViewById<Toolbar>(R.id.toolbar)
+        setSupportActionBar(toolbar)
+
+        val spinnerAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, items)
+        spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        spinner.adapter = spinnerAdapter
 
         mMap = googleMap
         geocoder = Geocoder(this)
@@ -113,6 +126,18 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
             }
         }
 
+        spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onNothingSelected(p0: AdapterView<*>?) {
+                filter = items[0]
+            }
+
+            override fun onItemSelected(p0: AdapterView<*>?, p1: View?, p2: Int, p3: Long) {
+                filter = items[p2]
+                println(filter)
+                reset.callOnClick()
+            }
+        }
+
         mMap.setOnMarkerClickListener(this)
     }
 
@@ -129,6 +154,12 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
     }
 
     private fun drawMarker(payment: Payment): Boolean {
+
+        if (filter != items[0]) {
+            if (payment.card != filter) {
+                return false
+            }
+        }
 
         val address = geocoder.getFromLocationName(payment.address, 10)
 

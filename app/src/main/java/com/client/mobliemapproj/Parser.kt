@@ -13,8 +13,8 @@ class Parser {
     @SuppressLint("SimpleDateFormat")
     fun read(resources: Resources): MutableList<Payment> {
 
-//        val inputStream = resources.openRawResource(R.raw.mookup)
-        val inputStream = resources.openRawResource(R.raw.redundantmookup)
+        val inputStream = resources.openRawResource(R.raw.mookup)
+//        val inputStream = resources.openRawResource(R.raw.redundantmookup)
         val reader = BufferedReader(InputStreamReader(inputStream, Charset.forName("UTF-8")))
 
         removeFirstLine(reader)

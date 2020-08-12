@@ -24,6 +24,29 @@
             android:layout_height="match_parent"
             tools:context=".">
 
+            <androidx.appcompat.widget.Toolbar
+                android:id="@+id/toolbar"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:background="@color/colorPrimary"
+                sothree:layout_constraintEnd_toEndOf="parent"
+                sothree:layout_constraintHorizontal_bias="0.0"
+                sothree:layout_constraintStart_toStartOf="parent"
+                sothree:layout_constraintTop_toTopOf="parent">
+
+                <Spinner
+                    android:id="@+id/spinner"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/toolbar"
+                    android:layout_alignStart="@+id/toolbar"
+                    android:layout_alignLeft="@+id/toolbar"
+                    android:layout_gravity="end"
+                    android:layout_marginEnd="10dp"
+                    android:layout_marginRight="10dp" />
+
+            </androidx.appcompat.widget.Toolbar>
+
             <Button
                 android:id="@+id/zoomPlus"
                 android:layout_width="50dp"
