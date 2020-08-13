@@ -2,10 +2,10 @@ package com.client.mobliemapproj
 
 import android.location.Geocoder
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.core.view.isVisible
@@ -23,6 +23,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.io.IOException
 
 @Suppress("UNCHECKED_CAST")
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarkerClickListener {
@@ -56,6 +57,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         val sorting = Sorter()
         sorting.sortList(paymentList)
 
+        progressBar.max = paymentList.size
+        progressBar.progress = 0
+
         recyclerView = findViewById(R.id.recyclerView)
         val viewManager = LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)
 
@@ -74,21 +78,26 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         mMap = googleMap
         geocoder = Geocoder(this)
 
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(zoomSpot, zoomLevel))
+        mMap.moveCamera(CameraUpdateFactory.newLatLng(zoomSpot))
+
+        var zoom = CameraUpdateFactory.zoomTo(zoomLevel)
+        mMap.animateCamera(zoom)
 
         zoomPlus.setOnClickListener {
-
+            zoomLevel = mMap.cameraPosition.zoom
             if (zoomLevel != 21F) {
                 zoomLevel += 1F
             }
-            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(zoomSpot, zoomLevel))
+            zoom = CameraUpdateFactory.zoomTo(zoomLevel)
+            mMap.animateCamera(zoom)
         }
         zoomMinus.setOnClickListener {
-
+            zoomLevel = mMap.cameraPosition.zoom
             if (zoomLevel != 2F) {
                 zoomLevel -= 1F
             }
-            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(zoomSpot, zoomLevel))
+            zoom = CameraUpdateFactory.zoomTo(zoomLevel)
+            mMap.animateCamera(zoom)
         }
         start.setOnClickListener {
             start.isVisible = false
@@ -96,9 +105,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
             val job = GlobalScope.launch(Dispatchers.Main) {
                 for (i in startIndex until paymentList.size) {
                     if (drawMarker(paymentList[i])) {
-                        Log.d("Thread", "place : ${paymentList[i].place}")
-                        delay(1000)
+                        delay (10)
                     }
+                    progressBar.progress++
                     countingIndex++
                 }
                 start.isVisible = true
@@ -116,11 +125,12 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                 job.cancel()
                 mMap.clear()
                 zoomSpot = LatLng(37.5217, 126.9243)
-                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(zoomSpot, zoomLevel))
+                mMap.moveCamera(CameraUpdateFactory.newLatLng(zoomSpot))
 
                 adapter.clear()
                 recyclerView.adapter = adapter
                 markerList.clear()
+                progressBar.progress = 0
                 startIndex = 0
                 countingIndex = 0
             }
@@ -148,7 +158,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
             adapter.addItem(temp[temp.size - 1 - i])
         }
         recyclerView.adapter = adapter
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(marker.position, zoomLevel))
+        mMap.moveCamera(CameraUpdateFactory.newLatLng(marker.position))
         zoomSpot = marker.position
         return false
     }
@@ -160,36 +170,46 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                 return false
             }
         }
+        try {
+            val address = geocoder.getFromLocationName(payment.address, 10)
 
-        val address = geocoder.getFromLocationName(payment.address, 10)
+            val latitude = address[0].latitude
+            val longitude = address[0].longitude
 
-        val latitude = address[0].latitude
-        val longitude = address[0].longitude
+            val new = LatLng(latitude, longitude)
+            val markString = payment.place
+            var flag = true
 
-        val new = LatLng(latitude, longitude)
-        val markString = payment.place
-        var flag = true
+            for (i in markerList) {
+                if (i.position == new) {
+                    flag = false
+                    val temp = i.tag as MutableList<Payment>
+                    temp.add(payment)
+                    i.showInfoWindow()
+                    onMarkerClick(i)
+                    i.isVisible = false
+                    break
+                }
+            }
 
-        for (i in markerList) {
-            if (i.position == new) {
-                flag = false
-                val temp = i.tag as MutableList<Payment>
-                temp.add(payment)
-                i.showInfoWindow()
-                onMarkerClick(i)
-                break
+            if (flag) {
+                val marker = mMap.addMarker(MarkerOptions().position(new).title(markString))
+                markerList.add(marker)
+                marker.tag = mutableListOf(payment)
+                marker.showInfoWindow()
+                onMarkerClick(marker)
+            }
+
+            zoomSpot = new
+
+        } catch (e: IOException) {
+            when (e.message) {
+                "grpc failed" -> {
+                    Toast.makeText(this, "grpc failed", Toast.LENGTH_SHORT).show()
+                }
+                else -> throw e
             }
         }
-
-        if (flag) {
-            val marker = mMap.addMarker(MarkerOptions().position(new).title(markString))
-            markerList.add(marker)
-            marker.tag = mutableListOf(payment)
-            marker.showInfoWindow()
-            onMarkerClick(marker)
-        }
-
-        zoomSpot = new
 
         return true
     }
