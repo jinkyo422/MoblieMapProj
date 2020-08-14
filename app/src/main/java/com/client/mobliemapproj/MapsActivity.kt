@@ -12,11 +12,6 @@ import androidx.core.view.isVisible
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.github.mikephil.charting.charts.BarChart
-import com.github.mikephil.charting.components.XAxis
-import com.github.mikephil.charting.data.BarData
-import com.github.mikephil.charting.data.BarDataSet
-import com.github.mikephil.charting.data.BarEntry
-import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
@@ -48,6 +43,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
     private var filter = items[0]
     private val dateMap = mutableMapOf<String, Int>()
     private lateinit var barChart: BarChart
+    private lateinit var chart: Chart
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -65,17 +61,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         val sorting = Sorter()
         sorting.sortList(paymentList)
 
-        progressBar.max = paymentList.size
-        progressBar.progress = 0
-
-        recyclerView = findViewById(R.id.recyclerView)
-        val viewManager = LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)
-        viewManager.isSmoothScrollbarEnabled = true
-        recyclerView.layoutManager = viewManager
-
-        adapter = PaymentAdapter()
-        recyclerView.adapter = adapter
-
         val toolbar = findViewById<Toolbar>(R.id.toolbar)
         setSupportActionBar(toolbar)
 
@@ -83,14 +68,24 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         spinner.adapter = spinnerAdapter
 
+        progressBar.max = paymentList.size
+        progressBar.progress = 0
+
         mMap = googleMap
         geocoder = Geocoder(this)
-
         mMap.moveCamera(CameraUpdateFactory.newLatLng(zoomSpot))
         mMap.animateCamera(CameraUpdateFactory.zoomTo(zoomLevel))
 
+        recyclerView = findViewById(R.id.recyclerView)
+        val viewManager = LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)
+        viewManager.isSmoothScrollbarEnabled = true
+        recyclerView.layoutManager = viewManager
+        adapter = PaymentAdapter()
+        recyclerView.adapter = adapter
+
         barChart = findViewById(R.id.barchart)
-        initChart()
+        chart = Chart()
+        chart.initChart(barChart)
 
         setButtonEvent()
 
@@ -125,6 +120,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
             mMap.animateCamera(CameraUpdateFactory.zoomTo(zoomLevel))
         }
         start.setOnClickListener {
+            if (countingIndex >= paymentList.size - 1) {
+                reset.callOnClick()
+            }
             start.isVisible = false
             pause.isVisible = true
             val job = GlobalScope.launch(Dispatchers.Main) {
@@ -136,11 +134,11 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                         } else {
                             dateMap[paymentList[i].simpleDate] = 1
                         }
-                        drawChart(dateMap)
+                        chart.drawChart(dateMap, barChart)
                         delay(100)
                     }
                     progressBar.progress++
-                    countingIndex++
+                    countingIndex = i
                 }
                 start.isVisible = true
                 pause.isVisible = false
@@ -148,7 +146,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
             pause.setOnClickListener {
                 start.isVisible = true
                 pause.isVisible = false
-                startIndex = countingIndex + 1
+                startIndex = countingIndex + 2
                 job.cancel()
             }
             reset.setOnClickListener {
@@ -177,7 +175,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
             override fun onItemSelected(p0: AdapterView<*>?, p1: View?, p2: Int, p3: Long) {
                 filter = items[p2]
-                println(filter)
                 reset.callOnClick()
             }
         }
@@ -230,42 +227,5 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         }
 
         return true
-    }
-
-    private fun initChart() {
-        barChart.setTouchEnabled(true)
-        barChart.setScaleEnabled(false)
-        barChart.isDragEnabled = false
-        barChart.setPinchZoom(false)
-
-        barChart.xAxis.setDrawLabels(true)
-        barChart.xAxis.setDrawGridLines(false)
-        barChart.xAxis.setDrawAxisLine(true)
-
-        barChart.axisRight.isEnabled = false
-        barChart.description.isEnabled = false
-    }
-
-    private fun drawChart(dateMap: MutableMap<String, Int>) {
-        val labels = mutableListOf<String>()
-        val entries = mutableListOf<BarEntry>()
-        var index = 0
-
-        for (i in dateMap) {
-            labels.add(i.key)
-            entries.add(BarEntry(index.toFloat(), i.value.toFloat()))
-            index++
-        }
-
-        barChart.xAxis.valueFormatter = IndexAxisValueFormatter(labels)
-        barChart.xAxis.position = XAxis.XAxisPosition.BOTTOM
-        barChart.xAxis.labelCount = entries.size
-        barChart.xAxis.textSize = 7f
-
-        val set = BarDataSet(entries, "결제건수")
-        set.valueTextSize = 12f
-
-        barChart.data = BarData(set)
-        barChart.invalidate()
     }
 }
