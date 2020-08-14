@@ -9,6 +9,7 @@ import androidx.appcompat.widget.Toolbar
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.activity_main.*
+import java.util.*
 
 class MainActivity : AppCompatActivity() {
 
@@ -30,8 +31,18 @@ class MainActivity : AppCompatActivity() {
         recyclerView.layoutManager = viewManager
 
         val recyclerViewAdapter = PaymentAdapter()
-        for(i in paymentList){
+
+        val dateMap = mutableMapOf<String, Int>()
+
+        for (i in paymentList) {
             recyclerViewAdapter.addItem(i)
+
+            val temp = dateMap[i.simpleDate]
+            if (temp != null) {
+                dateMap[i.simpleDate] = temp + 1
+            } else {
+                dateMap[i.simpleDate] = 1
+            }
         }
 
         recyclerView.adapter = recyclerViewAdapter

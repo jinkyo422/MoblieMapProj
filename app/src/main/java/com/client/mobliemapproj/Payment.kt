@@ -7,6 +7,7 @@ import java.util.*
 data class Payment(
     val paymentID: Int,
     val date: Date,
+    val simpleDate: String,
     val place: String,
     val address: String,
     val person: String,

@@ -13,8 +13,8 @@ class Parser {
     @SuppressLint("SimpleDateFormat")
     fun read(resources: Resources): MutableList<Payment> {
 
-        val inputStream = resources.openRawResource(R.raw.mookup)
-//        val inputStream = resources.openRawResource(R.raw.redundantmookup)
+//        val inputStream = resources.openRawResource(R.raw.mookup)
+        val inputStream = resources.openRawResource(R.raw.redundantmookup)
         val reader = BufferedReader(InputStreamReader(inputStream, Charset.forName("UTF-8")))
 
         removeFirstLine(reader)
@@ -32,7 +32,9 @@ class Parser {
             val dateFormat = SimpleDateFormat("yyyy.MM.dd HH:mm:ss")
             val date = dateFormat.parse(comma[1])
 
-            val payment = Payment(paymentId, date, place, address, person, card)
+            val space = comma[1].split(" ")
+
+            val payment = Payment(paymentId, date, space[0], place, address, person, card)
             paymentList.add(payment)
         }
 
