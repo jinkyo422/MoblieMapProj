@@ -7,8 +7,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:gravity="bottom"
-    sothree:umanoPanelHeight="180dp"
-    sothree:umanoShadowHeight="180dp"
+    sothree:umanoPanelHeight="40dp"
+    sothree:umanoShadowHeight="40dp"
     tools:context=".MapsActivity">
 
     <fragment
@@ -57,10 +57,27 @@
                 tools:layout_editor_absoluteX="0dp" />
 
             <Button
+                android:id="@+id/datesetting"
+                android:layout_width="119dp"
+                android:layout_height="46dp"
+                android:layout_alignStart="@+id/toolbar"
+                android:layout_alignLeft="@+id/toolbar"
+                android:layout_gravity="center"
+                android:layout_marginStart="177dp"
+                android:layout_marginLeft="177dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginRight="16dp"
+                android:text="DateSetting"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@+id/reset"
+                app:layout_constraintTop_toBottomOf="@+id/progressBar" />
+
+            <Button
                 android:id="@+id/zoomPlus"
                 android:layout_width="50dp"
                 android:layout_height="70dp"
-                android:layout_marginTop="200dp"
+                android:layout_marginTop="120dp"
                 android:text="+"
                 app:layout_constraintHorizontal_bias="0.955"
                 app:layout_constraintLeft_toLeftOf="parent"
@@ -71,7 +88,7 @@
                 android:id="@+id/zoomMinus"
                 android:layout_width="50dp"
                 android:layout_height="70dp"
-                android:layout_marginTop="268dp"
+                android:layout_marginTop="188dp"
                 android:text="-"
                 app:layout_constraintHorizontal_bias="0.955"
                 app:layout_constraintLeft_toLeftOf="parent"
@@ -82,10 +99,10 @@
                 android:id="@+id/start"
                 android:layout_width="50dp"
                 android:layout_height="70dp"
-                android:layout_marginTop="120dp"
+                android:layout_marginTop="64dp"
                 android:text="Start"
                 android:visibility="visible"
-                app:layout_constraintHorizontal_bias="0.163"
+                app:layout_constraintHorizontal_bias="0.0"
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintRight_toRightOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
@@ -94,10 +111,10 @@
                 android:id="@+id/pause"
                 android:layout_width="50dp"
                 android:layout_height="70dp"
-                android:layout_marginTop="120dp"
+                android:layout_marginTop="64dp"
                 android:text="Pause"
                 android:visibility="invisible"
-                app:layout_constraintHorizontal_bias="0.163"
+                app:layout_constraintHorizontal_bias="0.0"
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintRight_toRightOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
@@ -106,9 +123,9 @@
                 android:id="@+id/reset"
                 android:layout_width="50dp"
                 android:layout_height="70dp"
-                android:layout_marginTop="120dp"
+                android:layout_marginTop="64dp"
                 android:text="Reset"
-                app:layout_constraintHorizontal_bias="0.332"
+                app:layout_constraintHorizontal_bias="0.138"
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintRight_toRightOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
@@ -120,14 +137,14 @@
     <LinearLayout
         android:id="@+id/dragView"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:clickable="true"
         android:focusable="false"
         android:orientation="vertical">
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="180dp"
+            android:layout_height="320dp"
             android:orientation="vertical">
 
             <TextView
@@ -139,7 +156,7 @@
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="140dp"
+                android:layout_height="320dp"
                 android:background="@drawable/layoutstyle"
                 android:orientation="vertical">
 
@@ -155,7 +172,7 @@
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="200dp"
+            android:layout_height="340dp"
             android:background="@drawable/layoutstyle"
             android:orientation="vertical">
 

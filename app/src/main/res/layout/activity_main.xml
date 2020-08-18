@@ -44,6 +44,23 @@
             android:gravity="center"
             android:text="화면" />
 
+        <Button
+            android:id="@+id/datebutton"
+            android:layout_width="119dp"
+            android:layout_height="46dp"
+            android:layout_alignStart="@+id/toolbar"
+            android:layout_alignLeft="@+id/toolbar"
+            android:layout_gravity="center"
+            android:layout_marginStart="147dp"
+            android:layout_marginLeft="147dp"
+            android:layout_marginTop="218dp"
+            android:layout_marginEnd="146dp"
+            android:layout_marginRight="146dp"
+            android:text="DateSetting"
+            sothree:layout_constraintEnd_toEndOf="@+id/textView1"
+            sothree:layout_constraintStart_toStartOf="@+id/textView1"
+            sothree:layout_constraintTop_toTopOf="@+id/textView1" />
+
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <LinearLayout

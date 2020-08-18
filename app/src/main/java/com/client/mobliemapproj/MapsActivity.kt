@@ -11,6 +11,7 @@ import androidx.appcompat.widget.Toolbar
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.borax12.materialdaterangepicker.date.DatePickerDialog
 import com.github.mikephil.charting.charts.BarChart
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
@@ -29,9 +30,12 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.IOException
+import java.text.SimpleDateFormat
+import java.util.*
 
-@Suppress("UNCHECKED_CAST")
-class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarkerClickListener {
+@Suppress("UNCHECKED_CAST", "DEPRECATION")
+class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarkerClickListener,
+    DatePickerDialog.OnDateSetListener {
 
     private lateinit var mMap: GoogleMap
     private lateinit var geocoder: Geocoder
@@ -39,8 +43,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: PaymentAdapter
     private val markerList = mutableListOf<Marker>()
-    private var zoomLevel = 12F
-    private var zoomSpot = LatLng(37.5217, 126.9243)
+    private val zoomSpot = LatLng(37.534844, 126.986697)
+    private var zoomLevel = 11.5F
     private var startIndex = 0
     private var countingIndex = 0
     private var items = mutableListOf("ALL", "CardA", "CardB", "CardC")
@@ -48,6 +52,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
     private val dateMap = mutableMapOf<String, Int>()
     private lateinit var barChart: BarChart
     private lateinit var chart: Chart
+    private lateinit var startDate: String
+    private lateinit var endDate: String
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -59,25 +65,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
     }
 
     override fun onMapReady(googleMap: GoogleMap) {
-        val parser = Parser()
-
-        val database = FirebaseDatabase.getInstance()
-        val myRef = database.reference.child("PaymentTable")
-
-        myRef.orderByChild("date").startAt("2020.08.01").endAt("2020.08.11").addValueEventListener(object :
-            ValueEventListener {
-            override fun onCancelled(error: DatabaseError) {
-                TODO("Not yet implemented")
-            }
-
-            override fun onDataChange(snapshot: DataSnapshot) {
-                for(i in snapshot.children){
-                    val payment = parser.read(i.value.toString())
-                    paymentList.add(payment)
-                    progressBar.max = paymentList.size
-                }
-            }
-        })
 
         val toolbar = findViewById<Toolbar>(R.id.toolbar)
         setSupportActionBar(toolbar)
@@ -106,6 +93,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
         setButtonEvent()
 
+        datesetting.callOnClick()
+
         mMap.setOnMarkerClickListener(this)
     }
 
@@ -116,8 +105,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
             adapter.addItem(temp[temp.size - 1 - i])
         }
         recyclerView.adapter = adapter
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(marker.position))
-        zoomSpot = marker.position
+//        mMap.moveCamera(CameraUpdateFactory.newLatLng(marker.position))
         return false
     }
 
@@ -140,6 +128,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
             if (countingIndex >= paymentList.size - 1) {
                 reset.callOnClick()
             }
+            mMap.moveCamera(CameraUpdateFactory.newLatLng(zoomSpot))
             start.isVisible = false
             pause.isVisible = true
             val job = GlobalScope.launch(Dispatchers.Main) {
@@ -171,8 +160,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                 pause.isVisible = false
                 job.cancel()
                 mMap.clear()
-                zoomSpot = LatLng(37.5217, 126.9243)
                 mMap.moveCamera(CameraUpdateFactory.newLatLng(zoomSpot))
+                mMap.animateCamera(CameraUpdateFactory.zoomTo(11.5F))
 
                 adapter.clear()
                 recyclerView.adapter = adapter
@@ -194,6 +183,52 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                 filter = items[p2]
                 reset.callOnClick()
             }
+        }
+
+        datesetting.setOnClickListener {
+            val now = Calendar.getInstance()
+            println(now.toString())
+            val dpd =
+                DatePickerDialog.newInstance(
+                    this,
+                    now[Calendar.YEAR],
+                    now[Calendar.MONTH],
+                    now[Calendar.DAY_OF_MONTH]
+                )
+            dpd.isAutoHighlight = true
+            dpd.show(fragmentManager, "Datepickerdialog")
+        }
+    }
+
+    override fun onDateSet(view: DatePickerDialog, year: Int, monthOfYear: Int, dayOfMonth: Int, yearEnd: Int, monthOfYearEnd: Int, dayOfMonthEnd: Int) {
+        val dateFormat = SimpleDateFormat("yyyy.MM.dd")
+        startDate = dateFormat.format(dateFormat.parse("$year.${monthOfYear+1}.$dayOfMonth"))
+        endDate = dateFormat.format(dateFormat.parse("$yearEnd.${monthOfYearEnd+1}.${dayOfMonthEnd+1}"))
+
+        reset.callOnClick()
+        paymentList.clear()
+
+        GlobalScope.launch() {
+            val parser = Parser()
+
+            val database = FirebaseDatabase.getInstance()
+            val myRef = database.reference.child("PaymentTable")
+
+            myRef.orderByChild("date").startAt(startDate).endAt(endDate)
+                .addValueEventListener(object :
+                    ValueEventListener {
+                    override fun onCancelled(error: DatabaseError) {
+                        TODO("Not yet implemented")
+                    }
+
+                    override fun onDataChange(snapshot: DataSnapshot) {
+                        for (i in snapshot.children) {
+                            val payment = parser.read(i.value.toString())
+                            paymentList.add(payment)
+                        }
+                        progressBar.max = paymentList.size
+                    }
+                })
         }
     }
 
@@ -231,8 +266,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                 marker.showInfoWindow()
                 onMarkerClick(marker)
             }
-
-            zoomSpot = new
 
         } catch (e: IOException) {
             when (e.message) {
