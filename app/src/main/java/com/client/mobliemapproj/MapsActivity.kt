@@ -19,6 +19,10 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 import kotlinx.android.synthetic.main.activity_maps.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -31,7 +35,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
     private lateinit var mMap: GoogleMap
     private lateinit var geocoder: Geocoder
-    private lateinit var paymentList: MutableList<Payment>
+    private var paymentList = mutableListOf<Payment>()
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: PaymentAdapter
     private val markerList = mutableListOf<Marker>()
@@ -56,10 +60,24 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
     override fun onMapReady(googleMap: GoogleMap) {
         val parser = Parser()
-        paymentList = parser.read(resources)
 
-        val sorting = Sorter()
-        sorting.sortList(paymentList)
+        val database = FirebaseDatabase.getInstance()
+        val myRef = database.reference.child("PaymentTable")
+
+        myRef.orderByChild("date").startAt("2020.08.01").endAt("2020.08.11").addValueEventListener(object :
+            ValueEventListener {
+            override fun onCancelled(error: DatabaseError) {
+                TODO("Not yet implemented")
+            }
+
+            override fun onDataChange(snapshot: DataSnapshot) {
+                for(i in snapshot.children){
+                    val payment = parser.read(i.value.toString())
+                    paymentList.add(payment)
+                    progressBar.max = paymentList.size
+                }
+            }
+        })
 
         val toolbar = findViewById<Toolbar>(R.id.toolbar)
         setSupportActionBar(toolbar)
@@ -68,7 +86,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         spinner.adapter = spinnerAdapter
 
-        progressBar.max = paymentList.size
         progressBar.progress = 0
 
         mMap = googleMap

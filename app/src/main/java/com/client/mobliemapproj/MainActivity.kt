@@ -8,6 +8,10 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 import kotlinx.android.synthetic.main.activity_main.*
 import java.util.*
 
@@ -19,11 +23,25 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val parser = Parser()
-        val paymentList = parser.read(resources)
+        val database = FirebaseDatabase.getInstance()
+        val myRef = database.reference.child("PaymentTable")
 
-        val sorting = Sorter()
-        sorting.sortList(paymentList)
+        val parser = Parser()
+        val paymentList = mutableListOf<Payment>()
+
+        myRef.orderByChild("date").startAt("2020.08.01").endAt("2020.08.05").addValueEventListener(object : ValueEventListener {
+            override fun onCancelled(error: DatabaseError) {
+                TODO("Not yet implemented")
+            }
+
+            override fun onDataChange(snapshot: DataSnapshot) {
+                for(i in snapshot.children){
+                    val payment = parser.read(i.value.toString())
+                    println(payment)
+                    paymentList.add(payment)
+                }
+            }
+        })
 
         val recyclerView = findViewById<RecyclerView>(R.id.recyclerView)
         val viewManager = LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)

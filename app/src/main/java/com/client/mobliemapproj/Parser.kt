@@ -1,47 +1,38 @@
 package com.client.mobliemapproj
 
 import android.annotation.SuppressLint
-import android.content.res.Resources
-import java.io.BufferedReader
-import java.io.InputStreamReader
-import java.nio.charset.Charset
 import java.text.SimpleDateFormat
 
 @Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
 class Parser {
 
     @SuppressLint("SimpleDateFormat")
-    fun read(resources: Resources): MutableList<Payment> {
+    fun read(value: String): Payment {
 
-//        val inputStream = resources.openRawResource(R.raw.mookup)
-        val inputStream = resources.openRawResource(R.raw.redundantmookup)
-        val reader = BufferedReader(InputStreamReader(inputStream, Charset.forName("UTF-8")))
+        val data = removeBrace(value)
+        val comma = data.split(", ")
 
-        removeFirstLine(reader)
-        val paymentList = mutableListOf<Payment>()
+        val dateFormat = SimpleDateFormat("yyyy.MM.dd HH:mm:ss")
+        val date = dateFormat.parse(removeEq(comma[0]))
+        val address = removeEq(comma[1])
+        val paymentId = removeEq(comma[2]).toInt()
+        val person = removeEq(comma[3])
+        val place = removeEq(comma[4])
+        val card = removeEq(comma[5])
 
-        reader.readLines().forEach {
+        val simpleDate = removeEq(comma[0]).split(" ")
 
-            val comma = it.split(",")
-            val paymentId = comma[0].toInt()
-            val card = comma[2]
-            val person = comma[3]
-            val place = comma[4]
-            val address = comma[5]
-
-            val dateFormat = SimpleDateFormat("yyyy.MM.dd HH:mm:ss")
-            val date = dateFormat.parse(comma[1])
-
-            val space = comma[1].split(" ")
-
-            val payment = Payment(paymentId, date, space[0], place, address, person, card)
-            paymentList.add(payment)
-        }
-
-        return paymentList
+        return Payment(paymentId, date, simpleDate[0], place, address, person, card)
     }
 
-    private fun removeFirstLine(reader: BufferedReader) {
-        reader.readLine()
+    private fun removeBrace(data: String): String {
+        val first = data.split("{")
+        val last = first[1].split("}")
+        return last[0]
+    }
+
+    private fun removeEq(s: String): String {
+        val value = s.split("=")
+        return value[1]
     }
 }
