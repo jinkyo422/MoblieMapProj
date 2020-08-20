@@ -3,10 +3,15 @@ package com.client.mobliemapproj
 import android.annotation.SuppressLint
 import java.text.SimpleDateFormat
 
-@Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
+/**
+ * Firebase DB의 snapshot을 payment로 파싱하는 클래스입니다.
+ *
+ * @fun : read(), removeBrace(), removeEq()
+ */
 class Parser {
 
     @SuppressLint("SimpleDateFormat")
+    @Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
     fun read(value: String): Payment {
 
         val data = removeBrace(value)

@@ -8,8 +8,18 @@ import com.github.mikephil.charting.data.BarEntry
 import com.github.mikephil.charting.formatter.DefaultValueFormatter
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
 
+/**
+ * MainAcitivity의 dateChart 메소드를 관리하는 클래스입니다.
+ *
+ * @fun : initChart(), drawChart()
+ */
 class Chart {
 
+    /**
+     * initChart() : xml로 선언된 barChart를 초기화하는 함수입니다.
+     *
+     * @param : barChart
+     */
     fun initChart(barChart: BarChart) {
         barChart.setTouchEnabled(true)
         barChart.setScaleEnabled(false)
@@ -25,6 +35,11 @@ class Chart {
         barChart.description.isEnabled = false
     }
 
+    /**
+     * drawChart() : dateMap을 사용하여 barChart를 생성하는 함수입니다.
+     *
+     * @param : dateMap, barChart
+     */
     fun drawChart(dateMap: MutableMap<String, Int>, barChart: BarChart) {
         val labels = mutableListOf<String>()
         val entries = mutableListOf<BarEntry>()

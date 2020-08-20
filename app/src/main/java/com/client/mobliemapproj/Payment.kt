@@ -4,6 +4,11 @@ import android.annotation.SuppressLint
 import java.text.SimpleDateFormat
 import java.util.*
 
+/**
+ * 결제정보를 저장하는 데이터클래스입니다.
+ *
+ * @fun : toString(), drawChart()
+ */
 data class Payment(
     val paymentID: Int,
     val date: Date,
@@ -22,13 +27,5 @@ data class Payment(
                 "거래일자 : ${dateFormat.format(date)}\n" +
                 "결제카드 : $card\n" +
                 "카드 소지자 : $person\n\n"
-    }
-
-    fun init(): String {
-        return "장소\n" +
-                "주소\n\n" +
-                "거래일자 : \n" +
-                "결제카드 : \n" +
-                "카드 소지자 : \n\n"
     }
 }

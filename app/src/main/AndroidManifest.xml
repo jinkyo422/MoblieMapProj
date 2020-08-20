@@ -12,24 +12,18 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".filrebase.FirebaseActivity"></activity>
-        <activity
-            android:name=".MainActivity"
-            android:label="Test"></activity>
-
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="AIzaSyC6RmkFd98KCr3eJrhWJPeZFt04NLWbVt0" />
-
         <activity
-            android:name=".MapsActivity"
+            android:name=".MainActivity"
             android:label="Map">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
     </application>
 
 </manifest>

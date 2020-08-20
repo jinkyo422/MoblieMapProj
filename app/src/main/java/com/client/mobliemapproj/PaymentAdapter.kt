@@ -6,6 +6,12 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 
+/**
+ * RecyclerView에 들어갈 payment를 관리하는 adapter클래스입니다.
+ *
+ * @fun : onCreateViewHolder(), getItemCount(), onBindViewHolder(), addItem(), clear()
+ * @innerclass : PaymentViewHolder
+ */
 class PaymentAdapter : RecyclerView.Adapter<PaymentAdapter.PaymentViewHolder>() {
 
     private val items = mutableListOf<Payment>()
