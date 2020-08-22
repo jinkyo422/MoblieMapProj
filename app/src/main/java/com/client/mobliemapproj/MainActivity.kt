@@ -1,9 +1,7 @@
 package com.client.mobliemapproj
 
-import android.annotation.SuppressLint
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
-import android.location.Geocoder
 import android.os.Bundle
 import android.view.View
 import android.widget.AdapterView
@@ -13,9 +11,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import com.borax12.materialdaterangepicker.date.DatePickerDialog
-import com.github.mikephil.charting.charts.BarChart
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
@@ -24,13 +19,21 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
+import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import com.sothree.slidinguppanel.SlidingUpPanelLayout
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.*
-import java.io.IOException
+import org.json.JSONArray
+import org.json.JSONObject
+import org.json.JSONTokener
+import java.io.BufferedReader
+import java.io.InputStreamReader
+import java.net.HttpURLConnection
+import java.net.URL
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -40,15 +43,13 @@ import java.util.*
  * @author jingyo
  * @version 1.0
  */
-class MainActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarkerClickListener,
-    DatePickerDialog.OnDateSetListener {
+class MainActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapClickListener,
+    GoogleMap.OnInfoWindowClickListener, GoogleMap.OnMarkerClickListener {
 
     private lateinit var googleMap: GoogleMap
-    private val zoomSpot = LatLng(37.534844, 126.986697)
-    private val zoomLevel = 11.5F
-    private lateinit var recyclerView: RecyclerView
+    private val zoomSpot = LatLng(37.533736, 127.004269)
+    private val zoomLevel = 11F
     private lateinit var paymentAdapter: PaymentAdapter
-    private lateinit var dateBarChart: BarChart
     private lateinit var dateChart: Chart
     private val cardType = mutableListOf("ALL CARD", "현대카드M", "현대카드X", "DIGITAL LOVER")
     private var cardTypeFilter = cardType[0]
@@ -67,6 +68,15 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
     private val markerList = mutableListOf<Marker>()
     private val dateChartMap = mutableMapOf<String, Int>()
 
+    /**
+     * 주소를 좌표(위도,경도)로 변환하기 위해 사용한 네이버 API
+     *
+     * clientId : 애플리케이션 클라이언트 아이디값
+     * clientSecret : 애플리케이션 클라이언트 시크릿값
+     */
+    private val clientId = "3ab2orh49c"
+    private val clientSecret = "11Dkb56UyB2141vJmOhrnr0j5gRPR2gh7NWbwfE1"
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -80,7 +90,9 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         this.googleMap = googleMap
         this.googleMap.moveCamera(CameraUpdateFactory.newLatLng(zoomSpot))
         this.googleMap.animateCamera(CameraUpdateFactory.zoomTo(zoomLevel))
+        this.googleMap.setOnMapClickListener(this)
         this.googleMap.setOnMarkerClickListener(this)
+        this.googleMap.setOnInfoWindowClickListener(this)
 
         initUI()
         setZoomEvent()
@@ -88,6 +100,10 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
         setSpinnerEvent()
         setCalendarEvent()
         datesetting.callOnClick()
+    }
+
+    override fun onMapClick(latLng: LatLng) {
+        slidingUpPanel.panelHeight = 0
     }
 
     override fun onMarkerClick(marker: Marker): Boolean {
@@ -101,12 +117,19 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
             }
         }
         recyclerView.adapter = paymentAdapter
+        slidingUpPanel.panelHeight = slidingUpPanel.shadowHeight
         return false
+    }
+
+    override fun onInfoWindowClick(marker: Marker) {
+        if (slidingUpPanel.panelHeight != 0) {
+            slidingUpPanel.panelState = SlidingUpPanelLayout.PanelState.EXPANDED
+        }
     }
 
     /**
      * initUI() : UI 구성요소를 초기화하는 함수입니다.
-     * => toolbar, spinner, progressBar, recyclerView, dateChart
+     * UI 구성요소 : toolbar, spinner, progressBar, recyclerView, dateChart
      */
     private fun initUI() {
         val toolbar = findViewById<Toolbar>(R.id.toolbar)
@@ -118,16 +141,14 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
         markerProgressBar.progress = 0
 
-        recyclerView = findViewById(R.id.recyclerView)
         val viewManager = LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)
         viewManager.isSmoothScrollbarEnabled = true
         recyclerView.layoutManager = viewManager
         paymentAdapter = PaymentAdapter()
         recyclerView.adapter = paymentAdapter
 
-        dateBarChart = findViewById(R.id.barChart)
         dateChart = Chart()
-        dateChart.initChart(dateBarChart)
+        dateChart.initChart(barChart)
     }
 
     /**
@@ -165,6 +186,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                 resetButton.callOnClick()
             }
             googleMap.moveCamera(CameraUpdateFactory.newLatLng(zoomSpot))
+            slidingUpPanel.panelHeight = 0
             startButton.isVisible = false
             pauseButton.isVisible = true
             val markerJob = GlobalScope.launch(Dispatchers.Main) {
@@ -178,7 +200,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                         } else {
                             dateChartMap[paymentList[i].simpleDate] = 1
                         }
-                        dateChart.drawChart(dateChartMap, dateBarChart)
+                        dateChart.drawChart(dateChartMap, barChart)
                         delay(100)
                     }
                 }
@@ -202,10 +224,11 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                 startIndex = 0
                 countingIndex = 0
                 markerProgressBar.progress = 0
+                slidingUpPanel.panelHeight = 0
 
                 paymentAdapter.clear()
                 recyclerView.adapter = paymentAdapter
-                dateBarChart.clear()
+                barChart.clear()
 
                 for (pairMarkerOptionsPayment in pairMarkerOptionsPaymentList) {
                     pairMarkerOptionsPayment.second.clear()
@@ -233,59 +256,40 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
     }
 
     /**
-     * setCalendarEvent() : calender 에 대한 이벤트 처리 함수입니다.
-     *
-     * @usage : calender 의 확인을 누르면 onDateSet()함수가 실행됩니다.
+     * setCalendarEvent() : datesetting 버튼에 대한 이벤트 처리 함수입니다.
      */
-    @Suppress("DEPRECATION")
     private fun setCalendarEvent() {
         datesetting.setOnClickListener {
-            val now = Calendar.getInstance()
-            println(now.toString())
-            val dpd =
-                DatePickerDialog.newInstance(
-                    this,
-                    now[Calendar.YEAR],
-                    now[Calendar.MONTH],
-                    now[Calendar.DAY_OF_MONTH]
-                )
-            dpd.isAutoHighlight = true
-            dpd.vibrate(false)
-            dpd.show(fragmentManager, "Datepickerdialog")
+            val builder = MaterialDatePicker.Builder.dateRangePicker()
+                .setTheme(R.style.CustomThemeOverlay_MaterialCalendar_Fullscreen)
+
+            val picker = builder.build()
+            picker.show(supportFragmentManager, "Calender")
+
+            picker.addOnPositiveButtonClickListener {
+                val dateFormat = SimpleDateFormat("yyyy.MM.dd", Locale.KOREA)
+                val startDate = dateFormat.format(it.first?.let { it1 -> Date(it1) }!!)
+                val endDate = dateFormat.format((it.second?.let { it1 -> Date(it1 + 64800000L) }!!))
+
+                getSnapshot(startDate, endDate)
+            }
         }
-    }
-
-    /**
-     * onDateSet() : calender 에서 사용자가 입력한 날짜를 받아오는 함수입니다.
-     *
-     * @param : year, monthOfYear, dayOfMonth 은 시작날짜
-     *          yearEnd, monthOfYearEnd, dayOfMonthEnd 은 종료날짜
-     * @call : getSnapshot()
-     */
-    @Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
-    @SuppressLint("SimpleDateFormat")
-    override fun onDateSet(view: DatePickerDialog, year: Int, monthOfYear: Int, dayOfMonth: Int, yearEnd: Int, monthOfYearEnd: Int, dayOfMonthEnd: Int) {
-        val dateFormat = SimpleDateFormat("yyyy.MM.dd")
-        val startDate = dateFormat.format(dateFormat.parse("$year.${monthOfYear + 1}.$dayOfMonth"))
-        val endDate =
-            dateFormat.format(dateFormat.parse("$yearEnd.${monthOfYearEnd + 1}.${dayOfMonthEnd + 1}"))
-
-        getSnapshot(startDate, endDate)
     }
 
     /**
      * getSnapshot() : Firebase DB의 내용을 snapshot 의 형태로 받아오는 함수입니다.
      *
-     * @param : startDate, endDate
-     * @call : readSnapshot()
-     *         getLatLng()
-     *         makeMarkerOptions()
+     * @param startDate 시작날짜
+     * @param endDate 마지막 날짜
      */
     private fun getSnapshot(startDate: String, endDate: String) {
         dbProgressBar.isVisible = true
+        datesetting.isClickable = false
+        spinner.isClickable = false
 
         val database = FirebaseDatabase.getInstance()
         val myRef = database.reference.child("PaymentTable")
+//        val myRef = database.reference.child("Test")
         myRef.orderByChild("date").startAt(startDate).endAt(endDate)
             .addValueEventListener(object : ValueEventListener {
                 override fun onCancelled(error: DatabaseError) {
@@ -309,6 +313,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
                         }
                         markerProgressBar.max = paymentList.size
                         dbProgressBar.isVisible = false
+                        datesetting.isClickable = true
+                        spinner.isClickable = true
                         startButton.isVisible = true
                         resetButton.isVisible = true
                     }
@@ -319,8 +325,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
     /**
      * readSnapshot() : parser 를 호출하여 snapshot 을 paymentList 로 저장하는 함수입니다.
      *
-     * @param : snapshot
-     * @call : parser.read()
+     * @param snapshot
      */
     private fun readSnapshot(snapshot: DataSnapshot) {
         val parser = Parser()
@@ -333,39 +338,48 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
 
     /**
      * getLatLng() : payment의 주소를 geocoding을 통해 위도,경도를 구하고 latLngList 로 저장하는 함수입니다.
-     *
-     * 병렬 프로그래밍 개발 필요 (Geocoder or getFromLocationName)
      */
     private fun getLatLng() {
-        val geocoderList = mutableListOf<Geocoder>()
-
         for (payment in paymentList) {
             latLngList.add(zoomSpot)
-            geocoderList.add(Geocoder(this))
         }
 
-        for (i in 0 until paymentList.size) {
-            try {
-                val address = geocoderList[i].getFromLocationName(paymentList[i].address, 1)
-                val latitude = address[0].latitude
-                val longitude = address[0].longitude
-                val newLatLng = LatLng(latitude, longitude)
-                latLngList[i] = newLatLng
-            } catch (e: IOException) {
-                when (e.message) {
-                    "grpc failed" -> {
-                        Toast.makeText(this, "구글지도 연동에 실패했습니다.", Toast.LENGTH_SHORT).show()
+        val jobs = List(paymentList.size) {
+            CoroutineScope(Dispatchers.IO).launch {
+                try {
+                    val url = URL("https://naveropenapi.apigw.ntruss.com/map-geocode/v2/geocode?query=${paymentList[it].address}")
+
+                    with(url.openConnection() as HttpURLConnection) {
+                        requestMethod = "GET"
+                        setRequestProperty("X-NCP-APIGW-API-KEY-ID", clientId)
+                        setRequestProperty("X-NCP-APIGW-API-KEY", clientSecret)
+
+                        val bufferedReader = BufferedReader(InputStreamReader(this.inputStream))
+                        val stringBuilder = StringBuilder()
+                        var stringPointer: Int
+                        while (bufferedReader.read().also { stringPointer = it } != -1) {
+                            stringBuilder.append(stringPointer.toChar())
+                        }
+                        val jsonString = stringBuilder.toString()
+                        val jsonObject = JSONTokener(jsonString).nextValue() as JSONObject
+
+                        val root = JSONArray(jsonObject.getString("addresses"))
+                        val latitude = root.getJSONObject(0).getString("y").toDouble()
+                        val longitude = root.getJSONObject(0).getString("x").toDouble()
+                        val newLatLng = LatLng(latitude, longitude)
+                        latLngList[it] = newLatLng
                     }
-                    else -> throw e
+                } catch (e: Exception) {
+                    println(e)
                 }
             }
         }
+        runBlocking { jobs.forEach { it.join() } }
     }
 
     /**
      * makeMarkerOptions() : latLngList와 paymentList를 통해 markerOptions를 생성하고 저장하는 함수입니다.
      */
-    @Suppress("DEPRECATION")
     private fun makeMarkerOptions() {
         val pairLatLngPlaceList = mutableListOf<Pair<LatLng, String>>()
 
@@ -376,7 +390,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
             if (listIndex == -1) {
                 pairPaymentIndexList.add(Pair(paymentList[i], pairLatLngPlaceList.size))
                 pairLatLngPlaceList.add(Pair(newLatLng, paymentList[i].place))
-                val bitmapDraw = resources.getDrawable(R.drawable.marker) as BitmapDrawable
+                val bitmapDraw = resources.getDrawable(R.drawable.marker, null) as BitmapDrawable
                 val markerImage = Bitmap.createScaledBitmap(bitmapDraw.bitmap, 150, 150, false)
                 val markerOptions = MarkerOptions().position(newLatLng).title(paymentList[i].place)
                     .icon(BitmapDescriptorFactory.fromBitmap(markerImage))
@@ -390,7 +404,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
     /**
      * makeMarkerOptions() : markerOptions를 통해 marker를 생성하고 지도에 찍어주는 함수입니다.
      *
-     * @param : payment
+     * @param payment
      */
     private fun drawMarker(payment: Payment): Boolean {
         if (cardTypeFilter != cardType[0]) {
@@ -410,13 +424,11 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarker
             markerList.add(marker)
             marker.showInfoWindow()
             pairMarkerOptionsPaymentList[paymentIndex].second.add(payment)
-            onMarkerClick(marker)
         } else {
             for (marker in markerList) {
                 if (marker.position == pairMarkerOptionsPaymentList[paymentIndex].first.position && marker.title == pairMarkerOptionsPaymentList[paymentIndex].first.title) {
                     marker.showInfoWindow()
                     pairMarkerOptionsPaymentList[paymentIndex].second.add(payment)
-                    onMarkerClick(marker)
                     break
                 }
             }

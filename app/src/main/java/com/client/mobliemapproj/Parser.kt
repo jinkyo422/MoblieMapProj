@@ -1,7 +1,7 @@
 package com.client.mobliemapproj
 
-import android.annotation.SuppressLint
 import java.text.SimpleDateFormat
+import java.util.*
 
 /**
  * Firebase DB의 snapshot을 payment로 파싱하는 클래스입니다.
@@ -10,14 +10,12 @@ import java.text.SimpleDateFormat
  */
 class Parser {
 
-    @SuppressLint("SimpleDateFormat")
-    @Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
     fun read(value: String): Payment {
 
         val data = removeBrace(value)
         val comma = data.split(", ")
 
-        val dateFormat = SimpleDateFormat("yyyy.MM.dd HH:mm:ss")
+        val dateFormat = SimpleDateFormat("yyyy.MM.dd HH:mm:ss", Locale.KOREA)
         val date = dateFormat.parse(removeEq(comma[0]))
         val address = removeEq(comma[1])
         val paymentId = removeEq(comma[2]).toInt()
@@ -27,7 +25,7 @@ class Parser {
 
         val simpleDate = removeEq(comma[0]).split(" ")
 
-        return Payment(paymentId, date, simpleDate[0], place, address, person, card)
+        return Payment(paymentId, date!!, simpleDate[0], place, address, person, card)
     }
 
     private fun removeBrace(data: String): String {

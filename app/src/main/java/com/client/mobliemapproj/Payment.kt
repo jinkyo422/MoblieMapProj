@@ -1,6 +1,5 @@
 package com.client.mobliemapproj
 
-import android.annotation.SuppressLint
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -18,9 +17,8 @@ data class Payment(
     val person: String,
     val card: String
 ) {
-    @SuppressLint("SimpleDateFormat")
     override fun toString(): String {
-        val dateFormat = SimpleDateFormat("yyyy.MM.dd HH:mm:ss")
+        val dateFormat = SimpleDateFormat("yyyy.MM.dd HH:mm:ss", Locale.KOREA)
 
         return "$place\n" +
                 "$address\n\n" +

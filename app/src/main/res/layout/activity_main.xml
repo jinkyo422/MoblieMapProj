@@ -3,146 +3,148 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:sothree="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/sliding_layout"
+    android:id="@+id/slidingUpPanel"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:gravity="bottom"
-    sothree:umanoPanelHeight="40dp"
-    sothree:umanoShadowHeight="40dp"
+    sothree:umanoPanelHeight="0dp"
+    sothree:umanoShadowHeight="180dp"
     tools:context=".MainActivity">
 
-    <fragment
-        android:id="@+id/map"
-        android:name="com.google.android.gms.maps.SupportMapFragment"
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:context=".MainActivity">
+        tools:context=".">
 
-        <androidx.constraintlayout.widget.ConstraintLayout
+        <fragment
+            android:id="@+id/map"
+            android:name="com.google.android.gms.maps.SupportMapFragment"
+            android:layout_width="411dp"
+            android:layout_height="666dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/markerProgressBar"
+            tools:context=".MainActivity" />
+
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            tools:context=".">
+            android:layout_height="48dp"
+            android:background="@color/colorAccent"
+            sothree:layout_constraintEnd_toEndOf="parent"
+            sothree:layout_constraintHorizontal_bias="0.0"
+            sothree:layout_constraintStart_toStartOf="parent"
+            sothree:layout_constraintTop_toTopOf="parent">
 
-            <androidx.appcompat.widget.Toolbar
-                android:id="@+id/toolbar"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:background="@color/colorAccent"
-                sothree:layout_constraintEnd_toEndOf="parent"
-                sothree:layout_constraintHorizontal_bias="0.0"
-                sothree:layout_constraintStart_toStartOf="parent"
-                sothree:layout_constraintTop_toTopOf="parent">
+            <Button
+                android:id="@+id/datesetting"
+                android:layout_width="119dp"
+                android:layout_height="46dp"
+                android:layout_alignStart="@+id/toolbar"
+                android:layout_alignLeft="@+id/toolbar"
+                android:layout_gravity="center"
+                android:text="DateSetting"
+                tools:layout_editor_absoluteX="129dp"
+                tools:layout_editor_absoluteY="0dp" />
 
-                <Button
-                    android:id="@+id/datesetting"
-                    android:layout_width="119dp"
-                    android:layout_height="46dp"
-                    android:layout_alignStart="@+id/toolbar"
-                    android:layout_alignLeft="@+id/toolbar"
-                    android:layout_gravity="center"
-                    android:text="DateSetting"
-                    tools:layout_editor_absoluteX="129dp"
-                    tools:layout_editor_absoluteY="0dp" />
-
-                <Spinner
-                    android:id="@+id/spinner"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_below="@+id/toolbar"
-                    android:layout_alignStart="@+id/toolbar"
-                    android:layout_alignLeft="@+id/toolbar"
-                    android:layout_gravity="end"
-                    android:layout_marginEnd="10dp"
-                    android:layout_marginRight="10dp" />
-
-            </androidx.appcompat.widget.Toolbar>
-
-            <ProgressBar
-                android:id="@+id/markerProgressBar"
-                style="?android:attr/progressBarStyleHorizontal"
-                android:layout_width="match_parent"
+            <Spinner
+                android:id="@+id/spinner"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:max="100"
-                android:progressDrawable="@drawable/progressbarstyle"
-                app:layout_constraintTop_toBottomOf="@+id/toolbar"
-                tools:layout_editor_absoluteX="0dp" />
+                android:layout_below="@+id/toolbar"
+                android:layout_alignStart="@+id/toolbar"
+                android:layout_alignLeft="@+id/toolbar"
+                android:layout_gravity="end"
+                android:layout_marginEnd="10dp"
+                android:layout_marginRight="10dp" />
 
-            <ProgressBar
-                android:id="@+id/dbProgressBar"
-                style="?android:attr/progressBarStyleHorizontal"
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
-                android:backgroundTint="@color/white"
-                android:indeterminate="true"
-                android:indeterminateTint="#1a09d6"
-                android:max="100"
-                android:visibility="invisible"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="0.0"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/toolbar" />
+        </androidx.appcompat.widget.Toolbar>
 
-            <Button
-                android:id="@+id/zoomPlusButton"
-                android:layout_width="50dp"
-                android:layout_height="70dp"
-                android:layout_marginTop="116dp"
-                android:text="+"
-                app:layout_constraintHorizontal_bias="0.955"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintRight_toRightOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+        <ProgressBar
+            android:id="@+id/markerProgressBar"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:max="100"
+            android:progressDrawable="@drawable/progressbarstyle"
+            app:layout_constraintTop_toBottomOf="@+id/toolbar"
+            tools:layout_editor_absoluteX="0dp" />
 
-            <Button
-                android:id="@+id/zoomMinusButton"
-                android:layout_width="50dp"
-                android:layout_height="70dp"
-                android:layout_marginTop="184dp"
-                android:text="-"
-                app:layout_constraintHorizontal_bias="0.955"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintRight_toRightOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+        <ProgressBar
+            android:id="@+id/dbProgressBar"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:backgroundTint="@color/white"
+            android:indeterminate="true"
+            android:indeterminateTint="#1a09d6"
+            android:max="100"
+            android:visibility="invisible"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/toolbar" />
 
-            <Button
-                android:id="@+id/startButton"
-                android:layout_width="50dp"
-                android:layout_height="70dp"
-                android:layout_marginTop="64dp"
-                android:text="Start"
-                android:visibility="visible"
-                app:layout_constraintHorizontal_bias="0.0"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintRight_toRightOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+        <Button
+            android:id="@+id/zoomPlusButton"
+            android:layout_width="50dp"
+            android:layout_height="70dp"
+            android:layout_marginTop="116dp"
+            android:text="+"
+            app:layout_constraintHorizontal_bias="0.955"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
-            <Button
-                android:id="@+id/pauseButton"
-                android:layout_width="50dp"
-                android:layout_height="70dp"
-                android:layout_marginTop="64dp"
-                android:text="Pause"
-                android:visibility="invisible"
-                app:layout_constraintHorizontal_bias="0.0"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintRight_toRightOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+        <Button
+            android:id="@+id/zoomMinusButton"
+            android:layout_width="50dp"
+            android:layout_height="70dp"
+            android:layout_marginTop="184dp"
+            android:text="-"
+            app:layout_constraintHorizontal_bias="0.955"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
-            <Button
-                android:id="@+id/resetButton"
-                android:layout_width="50dp"
-                android:layout_height="70dp"
-                android:layout_marginTop="64dp"
-                android:text="Reset"
-                android:visibility="invisible"
-                app:layout_constraintHorizontal_bias="0.138"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintRight_toRightOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+        <Button
+            android:id="@+id/startButton"
+            android:layout_width="50dp"
+            android:layout_height="70dp"
+            android:layout_marginTop="64dp"
+            android:text="Start"
+            android:visibility="invisible"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
-        </androidx.constraintlayout.widget.ConstraintLayout>
+        <Button
+            android:id="@+id/pauseButton"
+            android:layout_width="50dp"
+            android:layout_height="70dp"
+            android:layout_marginTop="64dp"
+            android:text="Pause"
+            android:visibility="invisible"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
-    </fragment>
+        <Button
+            android:id="@+id/resetButton"
+            android:layout_width="50dp"
+            android:layout_height="70dp"
+            android:layout_marginTop="64dp"
+            android:text="Reset"
+            android:visibility="invisible"
+            app:layout_constraintHorizontal_bias="0.138"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
     <LinearLayout
         android:id="@+id/dragView"
@@ -159,14 +161,14 @@
 
             <TextView
                 android:layout_width="wrap_content"
-                android:layout_height="40dp"
+                android:layout_height="35dp"
                 android:paddingLeft="16sp"
                 android:text="정보"
                 android:textSize="24sp" />
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="280dp"
+                android:layout_height="285dp"
                 android:orientation="vertical">
 
                 <androidx.recyclerview.widget.RecyclerView
