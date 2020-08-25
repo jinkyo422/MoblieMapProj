@@ -18,7 +18,7 @@ class Chart {
     /**
      * initChart() : xml로 선언된 barChart를 초기화하는 함수입니다.
      *
-     * @param : barChart
+     * @param barChart
      */
     fun initChart(barChart: BarChart) {
         barChart.setTouchEnabled(true)
@@ -38,7 +38,8 @@ class Chart {
     /**
      * drawChart() : dateMap을 사용하여 barChart를 생성하는 함수입니다.
      *
-     * @param : dateMap, barChart
+     * @param dateMap
+     * @param barChart
      */
     fun drawChart(dateMap: MutableMap<String, Int>, barChart: BarChart) {
         val labels = mutableListOf<String>()

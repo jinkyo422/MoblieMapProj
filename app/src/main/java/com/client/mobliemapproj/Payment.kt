@@ -14,7 +14,7 @@ data class Payment(
     val simpleDate: String,
     val place: String,
     val address: String,
-    val person: String,
+    val money: Int,
     val card: String
 ) {
     override fun toString(): String {
@@ -23,7 +23,7 @@ data class Payment(
         return "$place\n" +
                 "$address\n\n" +
                 "거래일자 : ${dateFormat.format(date)}\n" +
-                "결제카드 : $card\n" +
-                "카드 소지자 : $person\n\n"
+                "결제금액 : ${money}원\n" +
+                "결제카드 : $card\n\n"
     }
 }

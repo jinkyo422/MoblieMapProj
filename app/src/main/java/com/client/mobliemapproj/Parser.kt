@@ -18,14 +18,14 @@ class Parser {
         val dateFormat = SimpleDateFormat("yyyy.MM.dd HH:mm:ss", Locale.KOREA)
         val date = dateFormat.parse(removeEq(comma[0]))
         val address = removeEq(comma[1])
-        val paymentId = removeEq(comma[2]).toInt()
-        val person = removeEq(comma[3])
+        val money = removeEq(comma[2]).toInt()
+        val paymentId = removeEq(comma[3]).toInt()
         val place = removeEq(comma[4])
         val card = removeEq(comma[5])
 
         val simpleDate = removeEq(comma[0]).split(" ")
 
-        return Payment(paymentId, date!!, simpleDate[0], place, address, person, card)
+        return Payment(paymentId, date!!, simpleDate[0], place, address, money, card)
     }
 
     private fun removeBrace(data: String): String {

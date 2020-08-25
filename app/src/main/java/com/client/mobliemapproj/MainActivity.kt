@@ -3,12 +3,12 @@ package com.client.mobliemapproj
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.widget.Toolbar
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -53,6 +53,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
     private lateinit var dateChart: Chart
     private val cardType = mutableListOf("ALL CARD", "현대카드M", "현대카드X", "DIGITAL LOVER")
     private var cardTypeFilter = cardType[0]
+
     /**
      * paymentList : Firebase DB의 내용을 파싱하여 저장하는 list
      * pairPaymentIndexList : 다른 Pair list의 payment의 index를 저장하는 list
@@ -81,8 +82,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val mapFragment = supportFragmentManager
-            .findFragmentById(R.id.map) as SupportMapFragment
+        val mapFragment = supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
     }
 
@@ -99,7 +99,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
         setButtonEvent()
         setSpinnerEvent()
         setCalendarEvent()
-        datesetting.callOnClick()
     }
 
     override fun onMapClick(latLng: LatLng) {
@@ -132,7 +131,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
      * UI 구성요소 : toolbar, spinner, progressBar, recyclerView, dateChart
      */
     private fun initUI() {
-        val toolbar = findViewById<Toolbar>(R.id.toolbar)
         setSupportActionBar(toolbar)
 
         val spinnerAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, cardType)
@@ -189,7 +187,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
             slidingUpPanel.panelHeight = 0
             startButton.isVisible = false
             pauseButton.isVisible = true
-            val markerJob = GlobalScope.launch(Dispatchers.Main) {
+            // 마커를 찍는 CoroutineScope
+            val markerJob = CoroutineScope(Dispatchers.Main).launch {
                 for (i in startIndex until paymentList.size) {
                     markerProgressBar.progress++
                     countingIndex = i
@@ -264,14 +263,19 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
                 .setTheme(R.style.CustomThemeOverlay_MaterialCalendar_Fullscreen)
 
             val picker = builder.build()
-            picker.show(supportFragmentManager, "Calender")
+            picker.show(supportFragmentManager, "Calendar")
 
             picker.addOnPositiveButtonClickListener {
                 val dateFormat = SimpleDateFormat("yyyy.MM.dd", Locale.KOREA)
-                val startDate = dateFormat.format(it.first?.let { it1 -> Date(it1) }!!)
-                val endDate = dateFormat.format((it.second?.let { it1 -> Date(it1 + 64800000L) }!!))
-
-                getSnapshot(startDate, endDate)
+                if(it.first == null || it.second == null ){
+                    Toast.makeText(this, "기간을 다시 선택해주세요", Toast.LENGTH_SHORT).show()
+                    datesetting.callOnClick()
+                }
+                else{
+                    val startDate = dateFormat.format(Date(it.first!!))
+                    val endDate = dateFormat.format((Date(it.second!! + 64800000L)))
+                    getSnapshot(startDate, endDate)
+                }
             }
         }
     }
@@ -289,16 +293,19 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
 
         val database = FirebaseDatabase.getInstance()
         val myRef = database.reference.child("PaymentTable")
-//        val myRef = database.reference.child("Test")
         myRef.orderByChild("date").startAt(startDate).endAt(endDate)
             .addValueEventListener(object : ValueEventListener {
                 override fun onCancelled(error: DatabaseError) {
+                    dbProgressBar.isVisible = false
+                    datesetting.isClickable = true
+                    spinner.isClickable = true
                     Toast.makeText(this@MainActivity, "DB 에러 발생", Toast.LENGTH_SHORT).show()
                 }
 
                 override fun onDataChange(snapshot: DataSnapshot) {
-                    val scope = CoroutineScope(Dispatchers.Main)
-                    scope.launch {
+                    // Coroutine background
+                    CoroutineScope(Dispatchers.Main).launch {
+                        // Main thread
                         paymentList.clear()
                         pairPaymentIndexList.clear()
                         pairMarkerOptionsPaymentList.clear()
@@ -306,17 +313,28 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
                         resetButton.callOnClick()
                         startButton.isVisible = false
                         resetButton.isVisible = false
-                        withContext(Dispatchers.IO) {
+                        withContext(Dispatchers.Default) {
+                            // Default thread
                             readSnapshot(snapshot)
+                        }
+                        // Main thread
+                        withContext(Dispatchers.IO) {
+                            // IO thread
                             getLatLng()
+                        }
+                        // Main thread
+                        withContext(Dispatchers.Default) {
+                            // Default thread
                             makeMarkerOptions()
                         }
+                        // Main thread
                         markerProgressBar.max = paymentList.size
                         dbProgressBar.isVisible = false
                         datesetting.isClickable = true
                         spinner.isClickable = true
                         startButton.isVisible = true
                         resetButton.isVisible = true
+                        Toast.makeText(this@MainActivity, "DB 연동 완료", Toast.LENGTH_SHORT).show()
                     }
                 }
             })
@@ -343,7 +361,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
         for (payment in paymentList) {
             latLngList.add(zoomSpot)
         }
-
+        // API 통신에 대한 병렬 처리
         val jobs = List(paymentList.size) {
             CoroutineScope(Dispatchers.IO).launch {
                 try {
@@ -370,7 +388,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMapCli
                         latLngList[it] = newLatLng
                     }
                 } catch (e: Exception) {
-                    println(e)
+                    Log.e("URL Exception", e.toString())
                 }
             }
         }

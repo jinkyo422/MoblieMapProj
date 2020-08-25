@@ -17,7 +17,7 @@
             android:value="AIzaSyC6RmkFd98KCr3eJrhWJPeZFt04NLWbVt0" />
         <activity
             android:name=".MainActivity"
-            android:label="Map">
+            android:label="P.I.V.">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
